@@ -1,12 +1,12 @@
 import { motion } /* eslint-disable-line no-unused-vars */ from 'framer-motion';
 
 const images = [
-  { src: '/gallery_ext.png', alt: 'Exterior View', classes: 'col-span-1 row-span-2' },
-  { src: '/gallery_int.png', alt: 'Wedding Setup Indoor', classes: 'col-span-1 row-span-1' },
-  { src: '/hero_bg.png', alt: 'Hall Interior', classes: 'col-span-1 row-span-1' },
-  { src: '/gallery_int.png', alt: 'Banquet details', classes: 'col-span-1 row-span-2' },
-  { src: '/hero_bg.png', alt: 'Chandelier', classes: 'col-span-1 row-span-1' },
-  { src: '/gallery_ext.png', alt: 'Garden area', classes: 'col-span-1 row-span-1' },
+  { src: `${import.meta.env.BASE_URL}gallery_ext.png`, alt: 'Exterior View', classes: 'col-span-1 row-span-2' },
+  { src: `${import.meta.env.BASE_URL}gallery_int.png`, alt: 'Wedding Setup Indoor', classes: 'col-span-1 row-span-1' },
+  { src: `${import.meta.env.BASE_URL}hero_bg.png`, alt: 'Hall Interior', classes: 'col-span-1 row-span-1' },
+  { src: `${import.meta.env.BASE_URL}gallery_int.png`, alt: 'Banquet details', classes: 'col-span-1 row-span-2' },
+  { src: `${import.meta.env.BASE_URL}hero_bg.png`, alt: 'Chandelier', classes: 'col-span-1 row-span-1' },
+  { src: `${import.meta.env.BASE_URL}gallery_ext.png`, alt: 'Garden area', classes: 'col-span-1 row-span-1' },
 ];
 
 export default function Gallery() {

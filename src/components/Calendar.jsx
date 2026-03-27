@@ -1,13 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Info, Loader2 } from 'lucide-react';
 import { getWhatsAppLink } from '../utils/whatsapp';
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [bookedDates, setBookedDates] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+
+  useEffect(() => {
+    const fetchCalendarEvents = async () => {
+      const apiKey = import.meta.env.VITE_GOOGLE_CALENDAR_API_KEY;
+      const calendarId = import.meta.env.VITE_GOOGLE_CALENDAR_ID;
+
+      if (!apiKey || !calendarId) {
+        setError('Live calendar unavailable (missing configuration). Check local terminal for setup instructions.');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
+        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59).toISOString();
+        
+        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&timeMin=${startOfMonth}&timeMax=${endOfMonth}&singleEvents=true`);
+        if (!res.ok) throw new Error('Failed to fetch from Google Calendar API');
+        
+        const data = await res.json();
+        
+        const newBookedDates = new Set();
+        if (data.items) {
+          data.items.forEach(event => {
+            const dateStr = event.start.date || (event.start.dateTime ? event.start.dateTime.split('T')[0] : null);
+            if (dateStr) {
+               newBookedDates.add(dateStr);
+            }
+          });
+        }
+        setBookedDates(newBookedDates);
+      } catch (err) {
+        console.error("Error fetching Google Calendar:", err);
+        setError('Could not connect to live availability data.');
+        setBookedDates(new Set()); // fallback to empty
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCalendarEvents();
+  }, [currentDate]);
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -18,36 +63,30 @@ export default function Calendar() {
   };
 
   const handleDateClick = (day) => {
-    // Weekend logic for demo: mock weekends as booked.
     const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dayOfWeek = dateObj.getDay();
-    const isBooked = dayOfWeek === 0 || dayOfWeek === 6; // Sun = 0, Sat = 6
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isBooked = bookedDates.has(dateStr);
 
     if (!isBooked) {
       const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
       const message = `Hi, I'd like to check availability and book the hall for ${formattedDate}.`;
-      // Use whatsapp.js utility logic or raw link
       window.open(`https://wa.me/919420448135?text=${encodeURIComponent(message)}`, '_blank');
     }
   };
 
   const renderDays = () => {
     const days = [];
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const today = new Date();
 
-    // Empty cells before the 1st
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(<div key={`empty-${i}`} className="p-4 border border-transparent"></div>);
     }
 
-    const today = new Date();
-
     for (let day = 1; day <= daysInMonth; day++) {
       const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const dayOfWeek = dateObj.getDay();
+      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      // Mock logic: Weekends booked, weekdays available
-      const isBooked = dayOfWeek === 0 || dayOfWeek === 6;
+      const isBooked = bookedDates.has(dateStr);
       const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
       
       let statusClass = "bg-white hover:border-primary-400 hover:shadow-md cursor-pointer text-slate-800";

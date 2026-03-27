@@ -50,15 +50,6 @@ export default function Navbar() {
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-8">
               {navLinks.map((link) => (
-                link.path.includes('#') ? (
-                  <a
-                    key={link.name}
-                    href={link.path}
-                    className={`text-sm font-medium transition-colors hover:text-primary-500 ${textClass}`}
-                  >
-                    {link.name}
-                  </a>
-                ) : (
                   <Link
                     key={link.name}
                     to={link.path}
@@ -66,7 +57,6 @@ export default function Navbar() {
                   >
                     {link.name}
                   </Link>
-                )
               ))}
               <button
                 onClick={handleBooking}
@@ -100,16 +90,6 @@ export default function Navbar() {
           >
             <div className="px-4 pt-2 pb-6 space-y-2 shadow-xl">
               {navLinks.map((link) => (
-                link.path.includes('#') ? (
-                  <a
-                    key={link.name}
-                    href={link.path}
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2 rounded-md text-base font-medium hover:bg-white/10"
-                  >
-                    {link.name}
-                  </a>
-                ) : (
                   <Link
                     key={link.name}
                     to={link.path}
@@ -118,7 +98,6 @@ export default function Navbar() {
                   >
                     {link.name}
                   </Link>
-                )
               ))}
               <button
                 onClick={() => {

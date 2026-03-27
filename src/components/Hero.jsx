@@ -16,7 +16,7 @@ export default function Hero() {
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          src="/elegant_hero.jpg"
+          src={`${import.meta.env.BASE_URL}elegant_hero.jpg`}
           alt="Elegance Hall Interior"
           className="w-full h-full object-cover opacity-70"
         />
