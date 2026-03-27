@@ -29,23 +29,42 @@ export default function Calendar() {
         const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59).toISOString();
         
         const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&timeMin=${startOfMonth}&timeMax=${endOfMonth}&singleEvents=true`);
-        if (!res.ok) throw new Error('Failed to fetch from Google Calendar API');
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          const errorMsg = errorData.error?.message || `Failed to fetch (Status ${res.status})`;
+          throw new Error(errorMsg);
+        }
         
         const data = await res.json();
         
         const newBookedDates = new Set();
         if (data.items) {
           data.items.forEach(event => {
-            const dateStr = event.start.date || (event.start.dateTime ? event.start.dateTime.split('T')[0] : null);
-            if (dateStr) {
-               newBookedDates.add(dateStr);
+            const startStr = event.start.date || (event.start.dateTime ? event.start.dateTime.split('T')[0] : null);
+            const endStr = event.end?.date || (event.end?.dateTime ? event.end.dateTime.split('T')[0] : null);
+            
+            if (startStr) {
+               const startDate = new Date(startStr);
+               const endDate = endStr ? new Date(endStr) : startDate;
+               
+               // If it's an all-day event, Google Calendar's end date is exclusive (the day after),
+               // so we should subtract 1 day from endDate if event.end.date exists.
+               if (event.end?.date && endDate > startDate) {
+                 endDate.setDate(endDate.getDate() - 1);
+               }
+
+               for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                 const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                 newBookedDates.add(dStr);
+               }
             }
           });
         }
         setBookedDates(newBookedDates);
       } catch (err) {
         console.error("Error fetching Google Calendar:", err);
-        setError('Could not connect to live availability data.');
+        setError(err.message || 'Could not connect to live availability data.');
         setBookedDates(new Set()); // fallback to empty
       } finally {
         setIsLoading(false);
@@ -150,6 +169,26 @@ export default function Calendar() {
             Discover our open dates. Click on any available date to instantly request a booking via WhatsApp.
           </motion.p>
         </div>
+
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex flex-col sm:flex-row items-start gap-4 text-left shadow-sm"
+          >
+            <Info className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0 text-red-500" />
+            <div>
+              <p className="font-bold text-lg mb-1">Calendar Integration Issue</p>
+              <p className="text-red-800 font-medium bg-white/50 p-2 rounded border border-red-100 mb-2">Error: {error}</p>
+              <p className="text-sm mt-3 font-semibold text-red-900">Please ensure the following are configured correctly:</p>
+              <ul className="text-sm list-disc pl-5 mt-1 space-y-1 text-red-800/90">
+                <li>Your Google Calendar sharing settings are set to <strong>"Public"</strong> and <strong>"See all event details"</strong> is selected.</li>
+                <li>Your Google Cloud API Key allows requests from <strong>{window.location.origin}/*</strong> in its <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="underline hover:text-red-900">Referrer restrictions</a>.</li>
+                <li>The Calendar ID and API Key in your environment variables are valid.</li>
+              </ul>
+            </div>
+          </motion.div>
+        )}
 
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
