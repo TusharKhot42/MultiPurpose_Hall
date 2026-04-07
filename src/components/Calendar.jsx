@@ -5,7 +5,7 @@ import { getWhatsAppLink } from '../utils/whatsapp';
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [bookedDates, setBookedDates] = useState(new Set());
+  const [eventsByDate, setEventsByDate] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -38,12 +38,19 @@ export default function Calendar() {
         
         const data = await res.json();
         
-        const newBookedDates = new Set();
+        const newEventsByDate = {};
         if (data.items) {
           data.items.forEach(event => {
             const startStr = event.start.date || (event.start.dateTime ? event.start.dateTime.split('T')[0] : null);
             const endStr = event.end?.date || (event.end?.dateTime ? event.end.dateTime.split('T')[0] : null);
             
+            let timeString = 'All Day';
+            if (event.start.dateTime && event.end.dateTime) {
+               const start = new Date(event.start.dateTime);
+               const end = new Date(event.end.dateTime);
+               timeString = `${start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            }
+
             if (startStr) {
                const startDate = new Date(startStr);
                const endDate = endStr ? new Date(endStr) : startDate;
@@ -56,16 +63,17 @@ export default function Calendar() {
 
                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                  const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                 newBookedDates.add(dStr);
+                 if (!newEventsByDate[dStr]) newEventsByDate[dStr] = [];
+                 newEventsByDate[dStr].push(timeString);
                }
             }
           });
         }
-        setBookedDates(newBookedDates);
+        setEventsByDate(newEventsByDate);
       } catch (err) {
         console.error("Error fetching Google Calendar:", err);
         setError(err.message || 'Could not connect to live availability data.');
-        setBookedDates(new Set()); // fallback to empty
+        setEventsByDate({}); 
       } finally {
         setIsLoading(false);
       }
@@ -84,9 +92,10 @@ export default function Calendar() {
   const handleDateClick = (day) => {
     const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const isBooked = bookedDates.has(dateStr);
+    const dayEvents = eventsByDate[dateStr] || [];
+    const isAllDay = dayEvents.includes('All Day');
 
-    if (!isBooked) {
+    if (!isAllDay) {
       const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
       const message = `Hi, I'd like to check availability and book the hall for ${formattedDate}.`;
       window.open(`https://wa.me/917666202907?text=${encodeURIComponent(message)}`, '_blank');
@@ -105,34 +114,51 @@ export default function Calendar() {
       const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      const isBooked = bookedDates.has(dateStr);
+      const dayEvents = eventsByDate[dateStr] || [];
+      const isBooked = dayEvents.length > 0;
+      const isAllDay = dayEvents.includes('All Day');
       const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
       
       let statusClass = "bg-white hover:border-primary-400 hover:shadow-md cursor-pointer text-slate-800";
-      let statusText = "Available";
       
       if (isPast) {
         statusClass = "bg-slate-50 text-slate-400 cursor-not-allowed";
-        statusText = "";
-      } else if (isBooked) {
+      } else if (isAllDay) {
         statusClass = "bg-red-50 text-red-800 cursor-not-allowed opacity-70";
-        statusText = "Booked";
+      } else if (isBooked) {
+        statusClass = "bg-orange-50 text-orange-900 hover:border-orange-400 hover:shadow-md cursor-pointer";
       }
+
+      const dotClass = isAllDay 
+        ? "w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-400 mt-1"
+        : isBooked
+          ? "w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-orange-400 mt-1 shadow-[0_0_5px_rgba(251,146,60,0.5)]"
+          : "w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-400 mt-1 shadow-[0_0_5px_rgba(74,222,128,0.5)]";
 
       days.push(
         <motion.div
-          key={day}
-          whileHover={!isBooked && !isPast ? { y: -2 } : {}}
-          onClick={() => (!isBooked && !isPast ? handleDateClick(day) : null)}
-          className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border border-slate-100 transition-all ${statusClass}`}
+           key={day}
+          whileHover={!isAllDay && !isPast ? { y: -2 } : {}}
+          onClick={() => (!isAllDay && !isPast ? handleDateClick(day) : null)}
+          className={`flex flex-col items-center justify-start p-2 sm:p-4 rounded-2xl border border-slate-100 transition-all ${statusClass} min-h-[5rem] sm:min-h-[6rem]`}
         >
           <span className={`text-lg sm:text-2xl font-bold ${isPast ? 'text-slate-400' : 'text-slate-700'}`}>{day}</span>
           {!isPast && (
-            <span className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider mt-1 ${
-              isBooked ? 'text-red-500/80' : 'text-primary-500'
-            }`}>
-              {statusText}
-            </span>
+            <div className="flex flex-col items-center mt-1 w-full">
+               <div className={dotClass}></div>
+               {isBooked && (
+                 <div className="mt-1.5 flex flex-col items-center gap-0.5 w-full">
+                    {dayEvents.slice(0, 2).map((time, idx) => (
+                      <span key={idx} className={`text-[8px] sm:text-[9px] sm:leading-tight font-semibold ${isAllDay ? 'text-red-700' : 'text-orange-700'} text-center line-clamp-1 w-full`}>
+                         {time}
+                      </span>
+                    ))}
+                    {dayEvents.length > 2 && (
+                       <span className="text-[8px] text-orange-600 font-bold">+{dayEvents.length - 2} more</span>
+                    )}
+                 </div>
+               )}
+            </div>
           )}
         </motion.div>
       );
@@ -233,14 +259,18 @@ export default function Calendar() {
             {renderDays()}
           </div>
           
-          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-slate-500 bg-slate-50 py-3 px-6 rounded-full inline-flex w-full sm:w-auto mx-auto border border-slate-100">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-slate-500 bg-slate-50 py-3 px-6 rounded-full inline-flex w-full sm:w-auto mx-auto border border-slate-100">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
               <span>Available Date</span>
             </div>
             <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+              <span>Partially Booked</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-400"></div>
-              <span>Booked</span>
+              <span>Fully Booked</span>
             </div>
           </div>
         </motion.div>

@@ -1,11 +1,31 @@
 import { motion } /* eslint-disable-line no-unused-vars */ from 'framer-motion';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import { useState } from 'react';
 import { getWhatsAppLink } from '../utils/whatsapp';
 
 export default function Contact() {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    details: ''
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const handleBooking = (e) => {
     e.preventDefault();
-    window.open(getWhatsAppLink(), '_blank');
+    
+    // Remove any spaces or special characters for validation
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      alert('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
+    const message = `Hello, I have a booking enquiry:\n\n*Name:* ${formData.name}\n*Contact Number:* ${formData.phone}\n*Event Details:* ${formData.details}`;
+    window.open(getWhatsAppLink(message), '_blank');
   };
 
   return (
@@ -70,15 +90,15 @@ export default function Contact() {
             <form onSubmit={handleBooking} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">Your Name</label>
-                <input type="text" className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="John Doe" required />
+                <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="John Doe" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">Contact Number</label>
-                <input type="tel" className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="+1..." required />
+                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} pattern="\d{10}" maxLength="10" title="Please enter exactly 10 digits" className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="10-digit mobile number" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">Event Details</label>
-                <textarea rows="4" className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Date, guest count, event type..." required></textarea>
+                <textarea rows="4" name="details" value={formData.details} onChange={handleChange} className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Date, guest count, event type..." required></textarea>
               </div>
               <button type="submit" className="w-full py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-xl transition-all hover:scale-[1.02] shadow-lg mt-4">
                 Chat on WhatsApp
