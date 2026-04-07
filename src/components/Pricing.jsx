@@ -29,9 +29,9 @@ const packages = [
 export default function Pricing() {
   const handleBooking = (pkgName) => {
     const defaultMessage = `Hi, I'm interested in booking the "${pkgName}" for an upcoming event. Could you provide more details?`;
-    const phone = '919876543210'; // using a stub or you can extract from whatsapp utils if needed. 
+    const phone = '917666202907'; // using a stub or you can extract from whatsapp utils if needed. 
     // wait, getWhatsAppLink provides a generic one. Let's just use it and append text if possible, but actually getWhatsAppLink in utils might not accept params.
-    window.open(`https://wa.me/919420448135?text=${encodeURIComponent(defaultMessage)}`, '_blank');
+    window.open(`https://wa.me/917666202907?text=${encodeURIComponent(defaultMessage)}`, '_blank');
   };
 
   return (

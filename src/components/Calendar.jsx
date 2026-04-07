@@ -18,7 +18,7 @@ export default function Calendar() {
       const calendarId = import.meta.env.VITE_GOOGLE_CALENDAR_ID;
 
       if (!apiKey || !calendarId) {
-        setError('Live calendar unavailable (missing configuration). Check local terminal for setup instructions.');
+        setError('Live calendar unAvailable (missing configuration). Check local terminal for setup instructions.');
         return;
       }
 
@@ -89,7 +89,7 @@ export default function Calendar() {
     if (!isBooked) {
       const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
       const message = `Hi, I'd like to check availability and book the hall for ${formattedDate}.`;
-      window.open(`https://wa.me/919420448135?text=${encodeURIComponent(message)}`, '_blank');
+      window.open(`https://wa.me/917666202907?text=${encodeURIComponent(message)}`, '_blank');
     }
   };
 
@@ -166,7 +166,7 @@ export default function Calendar() {
             transition={{ delay: 0.2 }}
             className="text-lg text-slate-600 max-w-2xl mx-auto"
           >
-            Discover our open dates. Click on any available date to instantly request a booking via WhatsApp.
+            Discover our open dates. Click on any Available date to instantly request a booking via WhatsApp.
           </motion.p>
         </div>
 

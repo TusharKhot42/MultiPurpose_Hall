@@ -22,7 +22,7 @@ export default function Footer() {
             <h4 className="text-lg font-semibold text-white mb-4">Contact Info</h4>
             <address className="not-italic text-sm space-y-2 text-slate-400">
               <p>123 Luxury Avenue, Metropolis</p>
-              <p>Email: contact@elegancehall.com</p>
+              <p>Email: tusharkhot42@gmail.com</p>
               <p>Phone: +91 76662 02907</p>
             </address>
           </div>
