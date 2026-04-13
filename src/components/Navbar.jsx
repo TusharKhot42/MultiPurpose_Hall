@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, UserCircle } from 'lucide-react';
 import { motion, AnimatePresence } /* eslint-disable-line no-unused-vars */ from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { getWhatsAppLink } from '../utils/whatsapp';
@@ -8,6 +9,7 @@ const navLinks = [
   { name: 'Home', path: '/' },
   { name: 'Pricing', path: '/#pricing' },
   { name: 'Availability', path: '/#calendar' },
+  { name: 'Check Status', path: '/status' },
   { name: 'About Us', path: '/about' },
   { name: 'Gallery', path: '/gallery' },
   { name: 'Contact', path: '/contact' },
@@ -64,6 +66,14 @@ export default function Navbar() {
               >
                 Booking
               </button>
+              
+              <Link
+                to="/admin"
+                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary-500 ${textClass}`}
+                title="Admin Dashboard"
+              >
+                <UserCircle className="w-5 h-5" />
+              </Link>
             </div>
           </div>
 
@@ -108,6 +118,15 @@ export default function Navbar() {
               >
                 Booking Enquiry
               </button>
+              
+              <Link
+                to="/admin"
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-2 mt-2 rounded-md text-base font-medium hover:bg-white/10 flex items-center gap-2"
+              >
+                <UserCircle className="w-5 h-5" />
+                Admin Login
+              </Link>
             </div>
           </motion.div>
         )}

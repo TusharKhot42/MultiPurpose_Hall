@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Info, Loader2 } from 'lucide-react';
-import { getWhatsAppLink } from '../utils/whatsapp';
+import BookingModal from './BookingModal';
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [eventsByDate, setEventsByDate] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // State for Booking Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -96,9 +100,13 @@ export default function Calendar() {
     const isAllDay = dayEvents.includes('All Day');
 
     if (!isAllDay) {
-      const formattedDate = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-      const message = `Hi, I'd like to check availability and book the hall for ${formattedDate}.`;
-      window.open(`https://wa.me/917666202907?text=${encodeURIComponent(message)}`, '_blank');
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const formattedDay = String(dateObj.getDate()).padStart(2, '0');
+      const inputFormatDate = `${year}-${month}-${formattedDay}`;
+
+      setSelectedDate(inputFormatDate);
+      setIsModalOpen(true);
     }
   };
 
@@ -275,6 +283,13 @@ export default function Calendar() {
           </div>
         </motion.div>
       </div>
+
+      <BookingModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        packageName="Custom Date Inquiry"
+        initialDate={selectedDate}
+      />
     </section>
   );
 }

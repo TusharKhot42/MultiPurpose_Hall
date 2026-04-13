@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { getWhatsAppLink } from '../utils/whatsapp';
 import { Check } from 'lucide-react';
+import BookingModal from './BookingModal';
 
 const packages = [
   {
@@ -27,12 +28,12 @@ const packages = [
 ];
 
 export default function Pricing() {
+  const [selectedPackage, setSelectedPackage] = useState(null);
+
   const handleBooking = (pkgName) => {
-    const defaultMessage = `Hi, I'm interested in booking the "${pkgName}" for an upcoming event. Could you provide more details?`;
-    const phone = '917666202907'; // using a stub or you can extract from whatsapp utils if needed. 
-    // wait, getWhatsAppLink provides a generic one. Let's just use it and append text if possible, but actually getWhatsAppLink in utils might not accept params.
-    window.open(`https://wa.me/917666202907?text=${encodeURIComponent(defaultMessage)}`, '_blank');
+    setSelectedPackage(pkgName);
   };
+
 
   return (
     <section className="py-24 bg-slate-50" id="pricing">
@@ -103,6 +104,12 @@ export default function Pricing() {
           ))}
         </div>
       </div>
+      
+      <BookingModal 
+        isOpen={!!selectedPackage} 
+        onClose={() => setSelectedPackage(null)} 
+        packageName={selectedPackage} 
+      />
     </section>
   );
 }
